@@ -6,6 +6,7 @@ const app = express();
 app.use(express.json());
 const textRoutes = require('./routes/text.route');
 const loginRoutes = require('./routes/login');
+const signupRoutes = require('./routes/signup_route');
 app.use(cors())
 
 // Connect to MongoDB
@@ -16,7 +17,8 @@ app.use(cors())
 
 
 app.use('/api', textRoutes);
-app.use('/api/login', loginRoutes);
+app.use('/api', loginRoutes);
+app.use('/api', signupRoutes);
 
 
 
