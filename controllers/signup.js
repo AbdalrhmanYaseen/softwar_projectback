@@ -9,8 +9,12 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false  // 👈 هذا يسمح بالاتصال حتى لو الشهادة غير موثوقة
   }
 });
+
 
 // Validation middleware
 exports.validateSignup = [
@@ -51,6 +55,11 @@ exports.signup = async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    if (role === 'student' && studentType === 'school') {
+      req.body.universityMajor = null;
+      req.body.trainingField = null;
+    }
 
     const user = new User({
       firstName,
@@ -60,8 +69,8 @@ exports.signup = async (req, res, next) => {
       role,
       studentType,
       schoolGrade,
-      universityMajor,
-      trainingField,
+      universityMajor: universityMajor || null,
+      trainingField: trainingField || null,
       isVerified: false,
       verificationCode
     });
@@ -83,3 +92,24 @@ exports.signup = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.verifyCode = async (req, res) => {
+  const { email, code } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    if (user.verificationCode === code) {
+      user.isVerified = true;
+      user.verificationCode = undefined;
+      await user.save();
+      return res.status(200).json({ message: "Email verified successfully!" });
+    }
+
+    res.status(400).json({ message: "Invalid verification code." });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
