@@ -9,8 +9,8 @@ const loginRoutes = require('./routes/login');
 const signupRoutes = require('./routes/signup_route');
 app.use(cors())
 
-// Connect to MongoDB
-  const mongoURI = 'mongodb+srv://abood123_db_user:abd12345@abd.g4xkm7a.mongodb.net/softwareproject?retryWrites=true&w=majority&appName=abd'
+// Connect to MongoD
+  const mongoURI = 'mongodb+srv://aboodjamal684_db_user:Abd123456@abd.lvp2v4i.mongodb.net/?retryWrites=true&w=majority&appName=abd'
   mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.log("error connecting to mongoDB"));   

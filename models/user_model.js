@@ -28,13 +28,14 @@ const userSchema = new mongoose.Schema({
   },
   universityMajor: {
     type: String,
-    enum: ['engineering','medicine','law','business','computer-science','arts','science','education'],
-    required: function() { return this.role === 'student' && this.studentType === 'university'; }
+    enum: ['engineering','medicine','law','business','computer-science','arts','science','education', 'other' , null],
+    default: null
+
   },
   trainingField: {
     type: String,
-    enum: ['engineering','legal','languages','it','business','medical','education'],
-    required: function() { return this.role === 'trainee'; }
+    enum: ['engineering','legal','languages','it','business','medical','education' , null],
+    default: null
   },
 
   isVerified: { type: Boolean, default: false },
