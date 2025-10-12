@@ -18,13 +18,14 @@ const userSchema = new mongoose.Schema({
   // الحقول الخاصة بالطلاب والمتدربين
   studentType: {
     type: String,
-    enum: ['school', 'university'],
-    required: function() { return this.role === 'student'; }
+    enum: ['school', 'university' , null],
+    default: null
+   
   },
   schoolGrade: {
     type: String,
-    enum: ['grade1','grade2','grade3','grade4','grade5','grade6','grade7','grade8','grade9','grade10','grade11','grade12'],
-    required: function() { return this.role === 'student' && this.studentType === 'school'; }
+    enum: ['grade1','grade2','grade3','grade4','grade5','grade6','grade7','grade8','grade9','grade10','grade11','grade12', null],
+    default: null
   },
   universityMajor: {
     type: String,
