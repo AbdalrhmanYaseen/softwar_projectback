@@ -45,7 +45,7 @@ try {
     {
       email: user.email,
       userId: user._id.toString(),
-      role: user.roles,
+      role: user.role,
     },
     process.env.SECRET,
     { expiresIn: "1h" }

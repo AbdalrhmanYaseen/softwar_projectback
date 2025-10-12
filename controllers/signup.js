@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS
   },
   tls: {
-    rejectUnauthorized: false  // 👈 هذا يسمح بالاتصال حتى لو الشهادة غير موثوقة
+    rejectUnauthorized: false
   }
 });
 
@@ -48,13 +48,17 @@ exports.signup = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { firstName, lastName, email, password, role, studentType, schoolGrade, universityMajor, trainingField } = req.body;
+    const { firstName, lastName, email, password, role, studentType, schoolGrade, universityMajor, trainingField, confirmPassword } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: "Email already registered" });
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
     
     if (role === 'student' && studentType === 'school') {
       req.body.universityMajor = null;
@@ -67,8 +71,8 @@ exports.signup = async (req, res, next) => {
       email,
       password: hashedPassword,
       role,
-      studentType,
-      schoolGrade,
+      studentType : studentType || null,
+      schoolGrade : schoolGrade || null,
       universityMajor: universityMajor || null,
       trainingField: trainingField || null,
       isVerified: false,
