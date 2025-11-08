@@ -9,8 +9,12 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false
   }
 });
+
 
 // Validation middleware
 exports.validateSignup = [
@@ -44,7 +48,7 @@ exports.signup = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { firstName, lastName, email, password, role, studentType, schoolGrade, universityMajor, trainingField } = req.body;
+    const { firstName, lastName, email, password, role, studentType, schoolGrade, universityMajor, trainingField, confirmPassword } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: "Email already registered" });
@@ -52,16 +56,25 @@ exports.signup = async (req, res, next) => {
     const hashedPassword = await bcrypt.hash(password, 12);
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+    
+    if (role === 'student' && studentType === 'school') {
+      req.body.universityMajor = null;
+      req.body.trainingField = null;
+    }
+
     const user = new User({
       firstName,
       lastName,
       email,
       password: hashedPassword,
       role,
-      studentType,
-      schoolGrade,
-      universityMajor,
-      trainingField,
+      studentType : studentType || null,
+      schoolGrade : schoolGrade || null,
+      universityMajor: universityMajor || null,
+      trainingField: trainingField || null,
       isVerified: false,
       verificationCode
     });
@@ -83,3 +96,24 @@ exports.signup = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.verifyCode = async (req, res) => {
+  const { email, code } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    if (user.verificationCode === code) {
+      user.isVerified = true;
+      user.verificationCode = undefined;
+      await user.save();
+      return res.status(200).json({ message: "Email verified successfully!" });
+    }
+
+    res.status(400).json({ message: "Invalid verification code." });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+

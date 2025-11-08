@@ -12,11 +12,15 @@ exports.login = async (req, res, next) => {
 const { email, password } = req.body;
 
 try {
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).select("+password");
   if (!user) {
     const error = new Error("A user with this email could not be found!");
     error.statusCode = 401;
     res.status(401).json({status:"fail", message: "user not found!" });
+  }
+
+  if (!user.isVerified) {
+    return res.status(401).json({ status: "fail", message: "Email not verified. Please verify your email before logging in." });
   }
 
   // if (user.roles === "INSTRUCTOR" && !user.isApproved) {
@@ -28,13 +32,9 @@ try {
     return res.status(400).json({ status: "fail", message: "Please provide email and password" });
   }
 
-  // const isMatch = await bcrypt.compare(password, user.password);
-  // if (!isMatch) {
-  //   const error = new Error("Wrong password!");
-  //   error.statusCode = 401;
-  //   throw error;
-  // }
-  const isMatch = password === user.password; // For demonstration purposes only
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  // For demonstration purposes only
   if (!isMatch) {
     const error = new Error("Wrong password!");
     error.statusCode = 401;
@@ -45,7 +45,7 @@ try {
     {
       email: user.email,
       userId: user._id.toString(),
-      role: user.roles,
+      role: user.role,
     },
     process.env.SECRET,
     { expiresIn: "1h" }
