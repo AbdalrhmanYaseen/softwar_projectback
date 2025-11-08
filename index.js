@@ -1,7 +1,6 @@
-
 // const express = require('express');
-// const mongoose = require('mongoose');
-// var cors = require('cors')
+// const cors = require('cors');
+
 // const app = express();
 // app.use(express.json());
 // const textRoutes = require('./routes/text.route');
@@ -41,8 +40,37 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
+
+// ===== Middleware =====
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      'https://ruwwad.vercel.app', // الفرونت على Vercel
+      'http://localhost:3000',      // للتجربة محلياً
+      'http://localhost:5173'       // لو استخدمتي Vite
+    ],
+    credentials: true
+  })
+);
+
+// ===== MongoDB Connect =====
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.warn('MONGODB_URI not set — running WITHOUT database.');
+} else {
+  mongoose
+    .connect(MONGODB_URI, {
+      maxPoolSize: 10
+    })
+    .then(() => console.log('✅ Connected to MongoDB'))
+    .catch((err) => {
+      console.error('❌ MongoDB connection error:', err);
+      // لو حابة توقفي السيرفر عند فشل الاتصال:
+      // process.exit(1);
+    });
+}
 
 // ====== routes تبعتك القديمة ======
 const textRoutes = require('./routes/text.route');
